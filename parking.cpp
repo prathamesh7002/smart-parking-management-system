@@ -119,17 +119,64 @@ struct VacatedStack
 struct HashNode
 {
     Vehicle v;
-    HashNode* next;
+    HashNode *next;
 };
 
-struct HashTable{
-HashNode* bucket[TABLE_SIZE]={};
+struct HashTable
+{
+    HashNode *bucket[TABLE_SIZE] = {};
 
-int hashOf(string key){
-    int h  = 0 ;
-    for(char c:key)
+    int hashOf(string key)
     {
-        h = (h * 31 +(unsigned char)c)% TABLE_SIZE;
+        int h = 0;
+        for (char c : key)
+        {
+            h = (h * 31 + (unsigned char)c) % TABLE_SIZE;
+        }
+        return h;
     }
-}
+    void insert(Vehicle v)
+    {
+        int b = hashOf(v.number);
+        bucket[b] = new HashNode{v, bucket[b]};
+    }
+
+    Vehicle *search(string key)
+    {
+        for (HashNode *p = bucket[hashOf(key)]; p; p->next)
+        {
+            if (p->v.number == key)
+            {
+                return &p->v;
+            }
+        }
+        return nullptr;
+    }
+
+    void remove(string key)
+    {
+        int b = hashOf(key);
+        HashNode *prev = nullptr;
+        for (HashNode *p = bucket[b]; p; prev = p, p = p->next)
+        {
+            if (p->v.number == key)
+            {
+                if (prev)
+                    prev->next = p->next;
+                else
+                    bucket[b] = p->next;
+                delete p;
+                return;
+            }
+        }
+    }
+
+    void clear()
+    {
+        for (int b = 0; b < TABLE_SIZE; b++)
+        {
+            while (bucket[b])
+                remove(bucket[b]->v.number);
+        }
+    }
 };
