@@ -304,10 +304,12 @@ void searchVehicle(string no)
     {
         hlSlot = slotName(p->slot);
         message = no + " | " + p->owner + " | " + p->type + " | slot " + hlSlot;
+        return ;
     }
     else if (waiting.contains(no))
     {
         message = no + " is waiting in the queue";
+        return;
     }
     fail(no + " not found");
 }
