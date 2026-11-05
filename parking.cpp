@@ -66,16 +66,16 @@ struct WatingQueue
         return v;
     }
     // to check the given number is in the wating queue or not
-    bool contains(string no)
+    bool contains(const string &no)
     {
-        for (QueueNode *p = front; p; p->next)
+        for (QueueNode *p = front; p; p = p->next)
         {
             if (p->v.number == no)
             {
                 return true;
             }
-            return false;
         }
+        return false;
     }
 
     void clear()
@@ -143,7 +143,7 @@ struct HashTable
 
     Vehicle *search(string key)
     {
-        for (HashNode *p = bucket[hashOf(key)]; p; p->next)
+        for (HashNode *p = bucket[hashOf(key)]; p; p=p->next)
         {
             if (p->v.number == key)
             {
