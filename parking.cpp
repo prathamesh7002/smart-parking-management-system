@@ -180,3 +180,84 @@ struct HashTable
         }
     }
 };
+/ need tosend to GUI
+WatingQueue waiting;
+VacatedStack vacated;
+HashTable table;
+
+bool ok = true;
+string message;
+string hlSlot;     // slot to highlight
+int hlBucket = -1; // bucket to highlight
+
+string slotName(int i)
+{
+    return "P" + string(i < 9 ? "0" : "") + to_string(i + 1);
+}
+string toUpper(string s)
+{
+    for (char &c : s)
+    {
+        c = toupper((unsigned char)c);
+    }
+    return s;
+}
+void fail(string text)
+{
+    ok = false;
+    message = text;
+}
+
+// main operation
+// Pick a slot: use the stack first (most recently vacated), else scan the array.
+int findFreeSolt()
+{
+    if (!vacated.isEmpty())
+        return vacated.pop();
+
+    for (int i = 0; i < MAX_SLOTS; i++)
+    {
+        if (slots[i].empty())
+            return i;
+    }
+    return -1; // parking is full
+}
+
+void parkVehicle(Vehicle v, int i){
+    v.slot = i;
+    slots[i]=v.number; //array update
+    table.insert(v);     //hash table insert
+    hlSlot = slotName(i);
+    hlBucket = table.hashOf(v.number);
+}
+
+void addVehicle(string no , string owner, string type){
+    no = toUpper(no);
+    if(no.empty()||owner.empty()){
+        fail("vehicle number and owner name are required");
+        return;
+    }
+    if(type.empty()) type ="Car";
+    hlBucket = table.hashOf(no);
+
+    if(table.search(no)||waiting.contains(no)){
+        fail(no+"is already in the system");
+        return;
+    }
+
+    Vehicle v;
+    v.number = no;
+    v.owner = owner;
+    v.type = type;
+
+    int i = findFreeSolt();
+    if(i>=0){
+        parkVehicle(v,i);
+        message = no + "parked at"+ slotName(i);
+    }else{
+        waiting.enqueue(v); //parking full 
+        hlBucket = -1;
+        message = "parking full." +no+ "added to the wating queue(position " + to_string(waiting.size)+")";
+    }
+}
+
