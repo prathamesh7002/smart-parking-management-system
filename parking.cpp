@@ -112,6 +112,7 @@ struct VacatedStack
         top = -1;
     }
 };
+
 // HASH TABLE - separate chaining (key = vehicle number)
 // hash(key) = (h * 31 + character )% TABLE_SIZE
 
