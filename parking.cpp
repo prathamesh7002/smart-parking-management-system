@@ -295,17 +295,94 @@ void exitVehicle(string no)
     }
 }
 
-void searchVehicle(string no){
+void searchVehicle(string no)
+{
     no = toUpper(no);
     hlBucket = table.hashOf(no);
-    Vehicle* p =table.search(no);
-    if(p){
+    Vehicle *p = table.search(no);
+    if (p)
+    {
         hlSlot = slotName(p->slot);
-         message = no + " | " + p->owner + " | " + p->type + " | slot " + hlSlot;
-    }else if(waiting.contains(no)){
+        message = no + " | " + p->owner + " | " + p->type + " | slot " + hlSlot;
+    }
+    else if (waiting.contains(no))
+    {
         message = no + " is waiting in the queue";
     }
-     fail(no + " not found");
+    fail(no + " not found");
 }
 
-// 
+// send the ans to gui
+void printAnswer()
+{
+    cout << (ok ? "OK|" : "ERR|") << message << "\n";
+    cout << "HIGHLIGHT|" << hlSlot << "|" << hlBucket << "\n";
+
+    for (int i = 0; i < MAX_SLOTS; i++)
+        cout << "SLOT|" << slotName(i) << "|" << slots[i] << "\n";
+
+    for (QueueNode *p = waiting.front; p; p = p->next)
+        cout << "QUEUE|" << p->v.number << "|" << p->v.owner << "|" << p->v.type << "\n";
+
+    for (int i = vacated.top; i >= 0; i--) // top first
+        cout << "STACK|" << slotName(vacated.data[i]) << "\n";
+
+    for (int b = 0; b < TABLE_SIZE; b++)
+    {
+        cout << "BUCKET|" << b;
+        for (HashNode *p = table.bucket[b]; p; p = p->next)
+            cout << "|" << p->v.number << "," << slotName(p->v.slot);
+        cout << "\n";
+    }
+    cout << "END" << endl; // endl also flushes the output
+}
+// read commands from the gui
+
+vector<string> split(string line)
+{
+    vector<string> parts;
+    stringstream ss(line);
+    string item;
+    while (getline(ss, item, '|'))
+    {
+        parts.push_back(item);
+    }
+    while (parts.size() < 4)
+        parts.push_back("");
+    return parts;
+}
+
+int main()
+{
+    string line;
+    while (getline(cin, line))
+    {
+        vector<string> p = split(line); // p[0]=command  p[1]=number  p[2]=owner  p[3]=type
+
+        ok = true;
+        message = "Status refreshed";
+        hlSlot = "";
+        hlBucket = -1;
+
+        if (p[0] == "add")
+            addVehicle(p[1], p[2], p[3]);
+        else if (p[0] == "exit")
+            exitVehicle(p[1]);
+        else if (p[0] == "search")
+            searchVehicle(p[1]);
+        else if (p[0] == "reset")
+        {
+            for (int i = 0; i < MAX_SLOTS; i++)
+                slots[i] = "";
+            waiting.clear();
+            vacated.clear();
+            table.clear();
+            message = "System reset";
+        }
+        else if (p[0] == "quit")
+            break;
+
+        printAnswer();
+    }
+    return 0;
+}
