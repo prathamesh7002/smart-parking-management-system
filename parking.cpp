@@ -80,7 +80,7 @@ struct WatingQueue
 
     void clear()
     {
-        while (!isempty())
+        while (!isEmpty())
         {
             dequeue();
         }
@@ -180,7 +180,7 @@ struct HashTable
         }
     }
 };
-/ need tosend to GUI
+// need tosend to GUI
 WatingQueue waiting;
 VacatedStack vacated;
 HashTable table;
@@ -223,25 +223,30 @@ int findFreeSolt()
     return -1; // parking is full
 }
 
-void parkVehicle(Vehicle v, int i){
+void parkVehicle(Vehicle v, int i)
+{
     v.slot = i;
-    slots[i]=v.number; //array update
-    table.insert(v);     //hash table insert
+    slots[i] = v.number; // array update
+    table.insert(v);     // hash table insert
     hlSlot = slotName(i);
     hlBucket = table.hashOf(v.number);
 }
 
-void addVehicle(string no , string owner, string type){
+void addVehicle(string no, string owner, string type)
+{
     no = toUpper(no);
-    if(no.empty()||owner.empty()){
+    if (no.empty() || owner.empty())
+    {
         fail("vehicle number and owner name are required");
         return;
     }
-    if(type.empty()) type ="Car";
+    if (type.empty())
+        type = "Car";
     hlBucket = table.hashOf(no);
 
-    if(table.search(no)||waiting.contains(no)){
-        fail(no+"is already in the system");
+    if (table.search(no) || waiting.contains(no))
+    {
+        fail(no + "is already in the system");
         return;
     }
 
@@ -251,13 +256,56 @@ void addVehicle(string no , string owner, string type){
     v.type = type;
 
     int i = findFreeSolt();
-    if(i>=0){
-        parkVehicle(v,i);
-        message = no + "parked at"+ slotName(i);
-    }else{
-        waiting.enqueue(v); //parking full 
+    if (i >= 0)
+    {
+        parkVehicle(v, i);
+        message = no + "parked at" + slotName(i);
+    }
+    else
+    {
+        waiting.enqueue(v); // parking full
         hlBucket = -1;
-        message = "parking full." +no+ "added to the wating queue(position " + to_string(waiting.size)+")";
+        message = "parking full." + no + "added to the wating queue(position " + to_string(waiting.size) + ")";
+    }
+}
+void exitVehicle(string no)
+{
+    no = toUpper(no);
+    hlBucket = table.hashOf(no);
+    Vehicle *p = table.search(no); // hash table search
+    if (!p)
+    {
+        fail(no + " not found");
+        return;
+    }
+
+    int i = p->slot;
+    table.remove(no); // hash table delete
+    slots[i] = "";    // array upadte
+    vacated.push(i);  // stack push
+    hlSlot = slotName(i);
+    message = no + "exited from " + slotName(i);
+
+    if (!waiting.isEmpty())
+    {
+        Vehicle w = waiting.dequeue();
+        int j = findFreeSolt();
+        parkVehicle(w, j);
+        message += ". waiting vehicle " + w.number + "moved" + slotName(j);
     }
 }
 
+void searchVehicle(string no){
+    no = toUpper(no);
+    hlBucket = table.hashOf(no);
+    Vehicle* p =table.search(no);
+    if(p){
+        hlSlot = slotName(p->slot);
+         message = no + " | " + p->owner + " | " + p->type + " | slot " + hlSlot;
+    }else if(waiting.contains(no)){
+        message = no + " is waiting in the queue";
+    }
+     fail(no + " not found");
+}
+
+// 
